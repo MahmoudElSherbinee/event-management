@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Event extends Model
 {
     use HasFactory;
+    protected $fillable = ['user_id', 'name', 'description', 'start_time', 'end_time'];
     public function user()
     {
         return $this->belongsTo(User::class);
