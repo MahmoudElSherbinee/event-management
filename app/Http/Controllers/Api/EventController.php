@@ -3,18 +3,28 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\EventResource;
+use App\Http\Traits\CanLoadRelationShips;
 use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class EventController extends Controller
 {
+    use CanLoadRelationShips;
+    public function __construct(
+        private readonly array $relations = ['user', 'attendees', 'attendees.user']
+        ) {
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        return Event::all();
+        $event = Event::query();
+        $query = $this->loadRelationships($event);
+        return EventResource::collection($query->paginate(3));
     }
 
     /**
@@ -31,7 +41,7 @@ class EventController extends Controller
 
         ]);
         $event = Event::create($validatedData);
-        return $event;
+        return new EventResource($this->loadRelationships($event));
     }
 
     /**
@@ -39,7 +49,7 @@ class EventController extends Controller
      */
     public function show(Event $event)
     {
-        return $event;
+        return new EventResource($this->loadRelationships($event, ['attendees.user']));
     }
 
     /**
@@ -54,7 +64,7 @@ class EventController extends Controller
             'end_time' => 'sometimes|date|after:start_time'
         ]);
         $event->update($validatedDate);
-        return $event;
+        return new EventResource($this->loadRelationships($event));
     }
 
     /**
@@ -64,8 +74,6 @@ class EventController extends Controller
     {
         $event->deleteOrFail();
 
-        return response()->json([
-            'message' => 'Event Deleted successfully'
-        ]);
+        return response(status:204);
     }
 }
