@@ -4,19 +4,24 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AttendeeResouce;
+use App\Http\Traits\CanLoadRelationShips;
 use App\Models\Attendee;
 use App\Models\Event;
 use Illuminate\Http\Request;
 
 class AttendeeController extends Controller
 {
+    public function __construct(
+        private readonly array $relations = ['user', 'event']
+    ) { }
+    use CanLoadRelationShips;
     /**
      * Display a listing of the resource.
      */
     public function index(Event $event)
     {
         $attendees = $event->attendees()->latest();
-        return AttendeeResouce::collection($attendees->paginate());
+        return AttendeeResouce::collection($this->loadRelationships($attendees)->paginate());
     }
 
     /**
@@ -24,17 +29,11 @@ class AttendeeController extends Controller
      */
     public function store(Request $request, Event $event)
     {
-        // if($event->id != $request['event_id'])
-        // {
-        //     return response()->json([
-        //         'message' => 'the event id is incorrect'
-        //     ]);
-        // }
         $validatedData = $request->validate([
             'user_id' => 'required',
         ]);
         $attendee = $event->attendees()->create($validatedData);
-        return new AttendeeResouce($attendee);
+        return new AttendeeResouce($this->loadRelationships($attendee));
 
     }
 
@@ -43,20 +42,9 @@ class AttendeeController extends Controller
      */
     public function show(Event $event, Attendee $attendee)
     {
-        return new AttendeeResouce($attendee);
+        return new AttendeeResouce($this->loadRelationships($attendee));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Event $event, Attendee $attendee)
-    {
-        $validatedData = $request->validate([
-            'user_id' => 'sometimes',
-        ]);
-        $attendee = $event->attendees()->update($validatedData);
-        return new AttendeeResouce($attendee);
-    }
 
     /**
      * Remove the specified resource from storage.

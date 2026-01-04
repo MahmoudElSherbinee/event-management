@@ -33,14 +33,13 @@ class EventController extends Controller
     public function store(Request $request)
     {
         $validatedData = $request->validate([
-            'user_id' => 'required',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'start_time' => 'required|date',
             'end_time' => 'required|date|after:start_time'
 
         ]);
-        $event = Event::create($validatedData);
+        $event = Event::create([...$validatedData, 'user_id' => $request->user()->id]);
         return new EventResource($this->loadRelationships($event));
     }
 
@@ -49,7 +48,7 @@ class EventController extends Controller
      */
     public function show(Event $event)
     {
-        return new EventResource($this->loadRelationships($event, ['attendees.user']));
+        return new EventResource($this->loadRelationships($event, ['user', 'attendees.user']));
     }
 
     /**
