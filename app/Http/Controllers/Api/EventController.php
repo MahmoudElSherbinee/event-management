@@ -8,6 +8,7 @@ use App\Http\Traits\CanLoadRelationShips;
 use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class EventController extends Controller
 {
@@ -22,6 +23,7 @@ class EventController extends Controller
      */
     public function index()
     {
+        Gate::authorize('viewAny', Event::class);
         $event = Event::query();
         $query = $this->loadRelationships($event);
         return EventResource::collection($query->paginate(3));
@@ -32,6 +34,7 @@ class EventController extends Controller
      */
     public function store(Request $request)
     {
+        Gate::authorize('create', Event::class);
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -48,6 +51,7 @@ class EventController extends Controller
      */
     public function show(Event $event)
     {
+        Gate::authorize('view', $event);
         return new EventResource($this->loadRelationships($event, ['user', 'attendees.user']));
     }
 
@@ -56,6 +60,12 @@ class EventController extends Controller
      */
     public function update(Request $request, Event $event)
     {
+        Gate::authorize('update', $event);
+        // if(Gate::denies('update-event', [$event]))
+        // {
+        //     abort(403, 'da eventak ?');
+        // }
+        // Gate::authorize('update-event', $event);
         $validatedDate = $request->validate([
             'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
@@ -71,6 +81,7 @@ class EventController extends Controller
      */
     public function destroy(Event $event)
     {
+        Gate::authorize('delete', $event);
         $event->deleteOrFail();
 
         return response(status:204);
