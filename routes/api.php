@@ -32,3 +32,5 @@ Route::post('register', [AuthController::class, 'register']);
 
 Route::post('logout', [AuthController::class, 'logout'])
 ->middleware('auth:sanctum');
+
+
