@@ -32,10 +32,9 @@ class AttendeeController extends Controller
     public function store(Request $request, Event $event)
     {
         Gate::authorize('create', Attendee::class);
-        $validatedData = $request->validate([
-            'user_id' => 'required',
+        $attendee = $event->attendees()->create([
+            'user_id' => $request->user()->id
         ]);
-        $attendee = $event->attendees()->create($validatedData);
         return new AttendeeResouce($this->loadRelationships($attendee));
 
     }
